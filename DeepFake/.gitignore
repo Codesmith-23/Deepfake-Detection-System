@@ -1,0 +1,37 @@
+# --- General ---
+.DS_Store
+*.log
+
+# --- Python / Backend ---
+# Virtual Environment
+venv/
+__pycache__/
+*.pyc
+
+# Database (Don't push your local history)
+*.db
+*.sqlite3
+
+# Large Data & Uploads (Crucial to ignore these!)
+backend/uploads/
+backend/dataset/
+backend/train_sample_videos/
+backend/test_videos/
+
+# Large Models (Github has a 100MB limit)
+*.h5
+backend/models/
+
+# --- Node / Frontend ---
+# Dependencies (These are huge and auto-generated)
+node_modules/
+
+# Next.js build output
+.next/
+out/
+build/
+dist/
+
+# Environment variables
+.env
+.env.local

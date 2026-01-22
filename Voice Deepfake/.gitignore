@@ -1,0 +1,22 @@
+# --- Python Basics ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Virtual Environment ---
+venv/
+env/
+.env
+
+# --- Model Files (Hosted on Hugging Face now) ---
+*.pth
+
+
+# --- Data & Uploads (Don't push these!) ---
+test_videos/
+uploads/
+
+# --- IDE Settings ---
+.vscode/
+.idea/
