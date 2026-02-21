@@ -192,8 +192,8 @@ def predict_media():
                     if x2-x1 < 10 or y2-y1 < 10: continue
                     
                     try:
-                        crop = cv2.resize(frame[y1:y2, x1:x2], (128, 128)) / 255.0
-                        pred = model.predict(crop.reshape(1, 128, 128, 3), verbose=0)[0][0]
+                        crop = cv2.resize(frame[y1:y2, x1:x2], (299, 299)) / 255.0
+                        pred = model.predict(crop.reshape(1, 299, 299, 3), verbose=0)[0][0]
                         fake_probs.append(pred)
 
                         if pred <= 0.5: # Fake Detected
