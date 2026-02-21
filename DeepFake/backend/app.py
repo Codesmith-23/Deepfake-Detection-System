@@ -12,9 +12,12 @@ import time
 import shutil
 import gc
 import atexit
+import jwt
+from functools import wraps
+from werkzeug.security import generate_password_hash, check_password_hash
 from tensorflow.keras.models import load_model
 from flask import Flask, request, jsonify, send_from_directory
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_cors import CORS
 import requests 
 from moviepy.editor import VideoFileClip 
@@ -25,6 +28,10 @@ from huggingface_hub import hf_hub_download
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}) # Allow all for local dev
+
+# JWT Configuration
+app.config['SECRET_KEY'] = 'your-secret-key-change-in-production-2026'  # TODO: Use environment variable
+app.config['JWT_EXPIRATION_HOURS'] = 24
 
 ALLOWED_AUDIO = {'.mp3', '.wav', '.flac', '.m4a'}
 ALLOWED_VIDEO = {'.mp4', '.avi', '.mov', '.mkv'}
@@ -101,16 +108,30 @@ DB_PATH = "database.db"
 def init_db():
     with sqlite3.connect(DB_PATH) as frconn:
         c = frconn.cursor()
+        
+        # Users table
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+        """)
+        
+        # Results table
         c.execute("""
             CREATE TABLE IF NOT EXISTS results (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT,
+                user_id INTEGER NOT NULL,
                 analysisID TEXT,
                 file_name TEXT,
                 result TEXT,
                 confidence TEXT,
                 timestamp TEXT,
-                file_size TEXT
+                file_size TEXT,
+                FOREIGN KEY (user_id) REFERENCES users (id)
             )
         """)
         frconn.commit()
@@ -124,6 +145,26 @@ def save_result(user_id, analysisID, file_name, result, confidence, file_size):
         VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (user_id, analysisID, file_name, result, confidence, datetime.now().isoformat(), file_size))
         conn.commit()
+
+# --- AUTHENTICATION UTILITIES ---
+def generate_token(user_id, username):
+    """Generate JWT token for authenticated user."""
+    payload = {
+        'user_id': user_id,
+        'username': username,
+        'exp': datetime.utcnow() + timedelta(hours=app.config['JWT_EXPIRATION_HOURS'])
+    }
+    return jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+
+def verify_token(token):
+    """Verify JWT token and return payload if valid."""
+    try:
+        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None  # Token expired
+    except jwt.InvalidTokenError:
+        return None  # Invalid token
 
 # --- MAIN ROUTE ---
 @app.route("/predict/media", methods=["POST"]) 
