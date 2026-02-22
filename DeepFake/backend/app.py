@@ -228,6 +228,51 @@ def register():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
+@app.route("/auth/login", methods=["POST"])
+def login():
+    """Authenticate user and return JWT token."""
+    try:
+        data = request.get_json()
+        
+        # Validate input
+        if not data or not all(k in data for k in ['username', 'password']):
+            return jsonify({"error": "Missing username or password"}), 400
+        
+        username = data['username'].strip()
+        password = data['password']
+        
+        # Find user
+        with sqlite3.connect(DB_PATH) as conn:
+            c = conn.cursor()
+            c.execute("SELECT id, username, email, password_hash FROM users WHERE username = ?", (username,))
+            user = c.fetchone()
+            
+            if not user:
+                return jsonify({"error": "Invalid username or password"}), 401
+            
+            user_id, username, email, password_hash = user
+            
+            # Verify password
+            if not check_password_hash(password_hash, password):
+                return jsonify({"error": "Invalid username or password"}), 401
+            
+            # Generate token
+            token = generate_token(user_id, username)
+            
+            return jsonify({
+                "message": "Login successful",
+                "token": token,
+                "user": {
+                    "id": user_id,
+                    "username": username,
+                    "email": email
+                }
+            }), 200
+            
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
 # --- MAIN ROUTE ---
 @app.route("/predict/media", methods=["POST"]) 
 def predict_media():
