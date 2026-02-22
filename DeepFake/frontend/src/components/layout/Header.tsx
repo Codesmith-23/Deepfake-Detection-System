@@ -14,7 +14,6 @@ const Header: React.FC = () => {
   const [user, setUser] = useState<UserType | null>(null);
   const pathname = usePathname();
   const router = useRouter();
-  const router = useRouter();
 
   useEffect(() => {
     // Check auth status on component mount
