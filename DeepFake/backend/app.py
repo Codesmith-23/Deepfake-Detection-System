@@ -316,6 +316,7 @@ def verify():
 
 # --- MAIN ROUTE ---
 @app.route("/predict/media", methods=["POST"]) 
+@token_required
 def predict_media():
     # 1. AUTO-WIPE: Clear previous session's frames immediately
     # This mimics the "new request" cleanup logic you wanted.
@@ -330,7 +331,7 @@ def predict_media():
         file = request.files["file"]
         filename = file.filename
         ext = os.path.splitext(filename)[1].lower()
-        user_id = request.form.get("user_id", "guest")
+        user_id = request.current_user['user_id']  # Get from JWT token
         analysisID = str(uuid.uuid4())
         
         # Save Video
@@ -452,8 +453,9 @@ def serve_flagged_frame(filename):
     return send_from_directory(FRAMES_DIR, filename)
 
 @app.route("/history", methods=["POST"])
+@token_required
 def get_results():
-    user_id = request.json.get("user_id", "guest")
+    user_id = request.current_user['user_id']  # Get from JWT token
     try:
         with sqlite3.connect(DB_PATH) as conn:
             c = conn.cursor()
@@ -463,10 +465,23 @@ def get_results():
     except Exception as e: return jsonify({"error": str(e)}), 500
 
 @app.route("/history/delete/<int:result_id>", methods=["DELETE"])
+@token_required
 def delete_result(result_id):
+    user_id = request.current_user['user_id']  # Get from JWT token
     try:
         with sqlite3.connect(DB_PATH) as conn:
             c = conn.cursor()
+            # First check if the result belongs to the user
+            c.execute("SELECT user_id FROM results WHERE id = ?", (result_id,))
+            result = c.fetchone()
+            
+            if not result:
+                return jsonify({"error": "Result not found"}), 404
+            
+            if result[0] != user_id:
+                return jsonify({"error": "Unauthorized to delete this result"}), 403
+            
+            # Delete if authorized
             c.execute("DELETE FROM results WHERE id = ?", (result_id,))
             conn.commit()
         return jsonify({"message": "Result deleted successfully"})
