@@ -12,9 +12,12 @@ import time
 import shutil
 import gc
 import atexit
+import jwt
+from functools import wraps
+from werkzeug.security import generate_password_hash, check_password_hash
 from tensorflow.keras.models import load_model
 from flask import Flask, request, jsonify, send_from_directory
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_cors import CORS
 import requests 
 from moviepy.editor import VideoFileClip 
@@ -25,6 +28,10 @@ from huggingface_hub import hf_hub_download
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}) # Allow all for local dev
+
+# JWT Configuration
+app.config['SECRET_KEY'] = 'your-secret-key-change-in-production-2026'  # TODO: Use environment variable
+app.config['JWT_EXPIRATION_HOURS'] = 24
 
 ALLOWED_AUDIO = {'.mp3', '.wav', '.flac', '.m4a'}
 ALLOWED_VIDEO = {'.mp4', '.avi', '.mov', '.mkv'}
@@ -101,16 +108,30 @@ DB_PATH = "database.db"
 def init_db():
     with sqlite3.connect(DB_PATH) as frconn:
         c = frconn.cursor()
+        
+        # Users table
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+        """)
+        
+        # Results table
         c.execute("""
             CREATE TABLE IF NOT EXISTS results (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT,
+                user_id INTEGER NOT NULL,
                 analysisID TEXT,
                 file_name TEXT,
                 result TEXT,
                 confidence TEXT,
                 timestamp TEXT,
-                file_size TEXT
+                file_size TEXT,
+                FOREIGN KEY (user_id) REFERENCES users (id)
             )
         """)
         frconn.commit()
@@ -125,8 +146,177 @@ def save_result(user_id, analysisID, file_name, result, confidence, file_size):
         """, (user_id, analysisID, file_name, result, confidence, datetime.now().isoformat(), file_size))
         conn.commit()
 
+# --- AUTHENTICATION UTILITIES ---
+def generate_token(user_id, username):
+    """Generate JWT token for authenticated user."""
+    payload = {
+        'user_id': user_id,
+        'username': username,
+        'exp': datetime.utcnow() + timedelta(hours=app.config['JWT_EXPIRATION_HOURS'])
+    }
+    return jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+
+def verify_token(token):
+    """Verify JWT token and return payload if valid."""
+    try:
+        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None  # Token expired
+    except jwt.InvalidTokenError:
+        return None  # Invalid token
+
+def token_required(f):
+    """Decorator to protect routes with JWT authentication."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = None
+        
+        # Get token from Authorization header
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            try:
+                # Expected format: "Bearer <token>"
+                token = auth_header.split(' ')[1]
+            except IndexError:
+                return jsonify({"error": "Invalid token format. Use: Bearer <token>"}), 401
+        
+        if not token:
+            return jsonify({"error": "Authentication token missing"}), 401
+        
+        # Verify token
+        payload = verify_token(token)
+        if not payload:
+            return jsonify({"error": "Invalid or expired token"}), 401
+        
+        # Pass user info to the route
+        request.current_user = payload
+        return f(*args, **kwargs)
+    
+    return decorated_function
+
+# --- AUTHENTICATION ROUTES ---
+@app.route("/auth/register", methods=["POST"])
+def register():
+    """Register a new user."""
+    try:
+        data = request.get_json()
+        
+        # Validate input
+        if not data or not all(k in data for k in ['username', 'email', 'password']):
+            return jsonify({"error": "Missing required fields: username, email, password"}), 400
+        
+        username = data['username'].strip()
+        email = data['email'].strip().lower()
+        password = data['password']
+        
+        # Basic validation
+        if len(username) < 3:
+            return jsonify({"error": "Username must be at least 3 characters"}), 400
+        if len(password) < 6:
+            return jsonify({"error": "Password must be at least 6 characters"}), 400
+        if '@' not in email or '.' not in email:
+            return jsonify({"error": "Invalid email format"}), 400
+        
+        # Hash password
+        password_hash = generate_password_hash(password)
+        
+        # Insert into database
+        with sqlite3.connect(DB_PATH) as conn:
+            c = conn.cursor()
+            try:
+                c.execute("""
+                    INSERT INTO users (username, email, password_hash, created_at)
+                    VALUES (?, ?, ?, ?)
+                """, (username, email, password_hash, datetime.now().isoformat()))
+                conn.commit()
+                user_id = c.lastrowid
+                
+                # Generate token for immediate login
+                token = generate_token(user_id, username)
+                
+                return jsonify({
+                    "message": "Registration successful",
+                    "token": token,
+                    "user": {
+                        "id": user_id,
+                        "username": username,
+                        "email": email
+                    }
+                }), 201
+                
+            except sqlite3.IntegrityError as e:
+                if 'username' in str(e):
+                    return jsonify({"error": "Username already exists"}), 409
+                elif 'email' in str(e):
+                    return jsonify({"error": "Email already registered"}), 409
+                else:
+                    return jsonify({"error": "Registration failed"}), 500
+                    
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/auth/login", methods=["POST"])
+def login():
+    """Authenticate user and return JWT token."""
+    try:
+        data = request.get_json()
+        
+        # Validate input
+        if not data or not all(k in data for k in ['username', 'password']):
+            return jsonify({"error": "Missing username or password"}), 400
+        
+        username = data['username'].strip()
+        password = data['password']
+        
+        # Find user
+        with sqlite3.connect(DB_PATH) as conn:
+            c = conn.cursor()
+            c.execute("SELECT id, username, email, password_hash FROM users WHERE username = ?", (username,))
+            user = c.fetchone()
+            
+            if not user:
+                return jsonify({"error": "Invalid username or password"}), 401
+            
+            user_id, username, email, password_hash = user
+            
+            # Verify password
+            if not check_password_hash(password_hash, password):
+                return jsonify({"error": "Invalid username or password"}), 401
+            
+            # Generate token
+            token = generate_token(user_id, username)
+            
+            return jsonify({
+                "message": "Login successful",
+                "token": token,
+                "user": {
+                    "id": user_id,
+                    "username": username,
+                    "email": email
+                }
+            }), 200
+            
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/auth/verify", methods=["GET"])
+@token_required
+def verify():
+    """Verify if the current token is valid."""
+    return jsonify({
+        "valid": True,
+        "user": {
+            "id": request.current_user['user_id'],
+            "username": request.current_user['username']
+        }
+    }), 200
+
 # --- MAIN ROUTE ---
 @app.route("/predict/media", methods=["POST"]) 
+@token_required
 def predict_media():
     # 1. AUTO-WIPE: Clear previous session's frames immediately
     # This mimics the "new request" cleanup logic you wanted.
@@ -141,7 +331,7 @@ def predict_media():
         file = request.files["file"]
         filename = file.filename
         ext = os.path.splitext(filename)[1].lower()
-        user_id = request.form.get("user_id", "guest")
+        user_id = request.current_user['user_id']  # Get from JWT token
         analysisID = str(uuid.uuid4())
         
         # Save Video
@@ -192,8 +382,8 @@ def predict_media():
                     if x2-x1 < 10 or y2-y1 < 10: continue
                     
                     try:
-                        crop = cv2.resize(frame[y1:y2, x1:x2], (128, 128)) / 255.0
-                        pred = model.predict(crop.reshape(1, 128, 128, 3), verbose=0)[0][0]
+                        crop = cv2.resize(frame[y1:y2, x1:x2], (299, 299)) / 255.0
+                        pred = model.predict(crop.reshape(1, 299, 299, 3), verbose=0)[0][0]
                         fake_probs.append(pred)
 
                         if pred <= 0.5: # Fake Detected
@@ -263,8 +453,9 @@ def serve_flagged_frame(filename):
     return send_from_directory(FRAMES_DIR, filename)
 
 @app.route("/history", methods=["POST"])
+@token_required
 def get_results():
-    user_id = request.json.get("user_id", "guest")
+    user_id = request.current_user['user_id']  # Get from JWT token
     try:
         with sqlite3.connect(DB_PATH) as conn:
             c = conn.cursor()
@@ -274,10 +465,23 @@ def get_results():
     except Exception as e: return jsonify({"error": str(e)}), 500
 
 @app.route("/history/delete/<int:result_id>", methods=["DELETE"])
+@token_required
 def delete_result(result_id):
+    user_id = request.current_user['user_id']  # Get from JWT token
     try:
         with sqlite3.connect(DB_PATH) as conn:
             c = conn.cursor()
+            # First check if the result belongs to the user
+            c.execute("SELECT user_id FROM results WHERE id = ?", (result_id,))
+            result = c.fetchone()
+            
+            if not result:
+                return jsonify({"error": "Result not found"}), 404
+            
+            if result[0] != user_id:
+                return jsonify({"error": "Unauthorized to delete this result"}), 403
+            
+            # Delete if authorized
             c.execute("DELETE FROM results WHERE id = ?", (result_id,))
             conn.commit()
         return jsonify({"message": "Result deleted successfully"})
