@@ -166,6 +166,35 @@ def verify_token(token):
     except jwt.InvalidTokenError:
         return None  # Invalid token
 
+def token_required(f):
+    """Decorator to protect routes with JWT authentication."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = None
+        
+        # Get token from Authorization header
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            try:
+                # Expected format: "Bearer <token>"
+                token = auth_header.split(' ')[1]
+            except IndexError:
+                return jsonify({"error": "Invalid token format. Use: Bearer <token>"}), 401
+        
+        if not token:
+            return jsonify({"error": "Authentication token missing"}), 401
+        
+        # Verify token
+        payload = verify_token(token)
+        if not payload:
+            return jsonify({"error": "Invalid or expired token"}), 401
+        
+        # Pass user info to the route
+        request.current_user = payload
+        return f(*args, **kwargs)
+    
+    return decorated_function
+
 # --- AUTHENTICATION ROUTES ---
 @app.route("/auth/register", methods=["POST"])
 def register():
@@ -272,6 +301,18 @@ def login():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+@app.route("/auth/verify", methods=["GET"])
+@token_required
+def verify():
+    """Verify if the current token is valid."""
+    return jsonify({
+        "valid": True,
+        "user": {
+            "id": request.current_user['user_id'],
+            "username": request.current_user['username']
+        }
+    }), 200
 
 # --- MAIN ROUTE ---
 @app.route("/predict/media", methods=["POST"]) 
