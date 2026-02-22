@@ -1,8 +1,26 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Shield, Eye, Zap, Users, ArrowRight} from "lucide-react";
+import {
+  Shield,
+  Eye,
+  Zap,
+  Users,
+  ArrowRight,
+  LogIn,
+  UserPlus,
+} from "lucide-react";
 import Button from "@/components/ui/Button";
+import { authService } from "@/lib/auth";
 
 export default function Home() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    setIsAuthenticated(authService.isAuthenticated());
+  }, []);
+
   const features = [
     {
       icon: <Eye className="h-8 w-8 text-primary-600" />,
@@ -52,29 +70,56 @@ export default function Home() {
             </h1>
 
             <p className="text-xl sm:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto">
-              Protect yourself from manipulated media with our cutting-edge deepfake
-              detection system powered by advanced deep learning techniques.
+              Protect yourself from manipulated media with our cutting-edge
+              deepfake detection system powered by advanced deep learning
+              techniques.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/detect">
-                <Button
-                  size="lg"
-                  className="w-full sm:w-auto text-lg px-8 py-4"
-                >
-                  Get Started
-                  <ArrowRight size={20} />
-                </Button>
-              </Link>
-              <Link href="/about">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-full sm:w-auto text-lg px-8 py-4"
-                >
-                  Learn More
-                </Button>
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link href="/detect">
+                    <Button
+                      size="lg"
+                      className="w-full sm:w-auto text-lg px-8 py-4"
+                    >
+                      Get Started
+                      <ArrowRight size={20} />
+                    </Button>
+                  </Link>
+                  <Link href="/about">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full sm:w-auto text-lg px-8 py-4"
+                    >
+                      Learn More
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/register">
+                    <Button
+                      size="lg"
+                      className="w-full sm:w-auto text-lg px-8 py-4"
+                    >
+                      <UserPlus size={20} />
+                      Sign Up Free
+                    </Button>
+                  </Link>
+                  <Link href="/login">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full sm:w-auto text-lg px-8 py-4"
+                    >
+                      <LogIn size={20} />
+                      Login
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
