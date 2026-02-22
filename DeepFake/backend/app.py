@@ -166,6 +166,68 @@ def verify_token(token):
     except jwt.InvalidTokenError:
         return None  # Invalid token
 
+# --- AUTHENTICATION ROUTES ---
+@app.route("/auth/register", methods=["POST"])
+def register():
+    """Register a new user."""
+    try:
+        data = request.get_json()
+        
+        # Validate input
+        if not data or not all(k in data for k in ['username', 'email', 'password']):
+            return jsonify({"error": "Missing required fields: username, email, password"}), 400
+        
+        username = data['username'].strip()
+        email = data['email'].strip().lower()
+        password = data['password']
+        
+        # Basic validation
+        if len(username) < 3:
+            return jsonify({"error": "Username must be at least 3 characters"}), 400
+        if len(password) < 6:
+            return jsonify({"error": "Password must be at least 6 characters"}), 400
+        if '@' not in email or '.' not in email:
+            return jsonify({"error": "Invalid email format"}), 400
+        
+        # Hash password
+        password_hash = generate_password_hash(password)
+        
+        # Insert into database
+        with sqlite3.connect(DB_PATH) as conn:
+            c = conn.cursor()
+            try:
+                c.execute("""
+                    INSERT INTO users (username, email, password_hash, created_at)
+                    VALUES (?, ?, ?, ?)
+                """, (username, email, password_hash, datetime.now().isoformat()))
+                conn.commit()
+                user_id = c.lastrowid
+                
+                # Generate token for immediate login
+                token = generate_token(user_id, username)
+                
+                return jsonify({
+                    "message": "Registration successful",
+                    "token": token,
+                    "user": {
+                        "id": user_id,
+                        "username": username,
+                        "email": email
+                    }
+                }), 201
+                
+            except sqlite3.IntegrityError as e:
+                if 'username' in str(e):
+                    return jsonify({"error": "Username already exists"}), 409
+                elif 'email' in str(e):
+                    return jsonify({"error": "Email already registered"}), 409
+                else:
+                    return jsonify({"error": "Registration failed"}), 500
+                    
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
 # --- MAIN ROUTE ---
 @app.route("/predict/media", methods=["POST"]) 
 def predict_media():
