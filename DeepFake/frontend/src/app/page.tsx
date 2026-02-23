@@ -23,36 +23,29 @@ export default function Home() {
 
   const features = [
     {
-      icon: <Eye className="h-8 w-8 text-primary-600" />,
-      title: "Advanced Detection",
+      icon: <Shield className="h-8 w-8 text-primary-600" />,
+      title: "Identity Protection",
       description:
-        "State-of-the-art AI models trained on extensive datasets for accurate deepfake detection.",
+        "Safeguard creator identities from unauthorized use in AI-generated content with facial recognition and embedding matching.",
+    },
+    {
+      icon: <Eye className="h-8 w-8 text-primary-600" />,
+      title: "Copyright Enforcement",
+      description:
+        "Automatically detect and flag violations of protected identities, supporting licensing and rights management.",
     },
     {
       icon: <Zap className="h-8 w-8 text-primary-600" />,
-      title: "Fast Processing",
+      title: "Dual-Layer Detection",
       description:
-        "Analyze videos quickly with our optimized processing pipeline and real-time results.",
-    },
-    {
-      icon: <Shield className="h-8 w-8 text-primary-600" />,
-      title: "Secure & Private",
-      description:
-        "Your videos are processed securely and never stored on our servers after analysis.",
+        "Combines authenticity verification with provenance tracking to identify both deepfakes and copyright infringement.",
     },
     {
       icon: <Users className="h-8 w-8 text-primary-600" />,
-      title: "User Friendly",
+      title: "Creator Registration",
       description:
-        "Simple drag-and-drop interface designed for both technical and non-technical users.",
+        "Simple interface for creators to register their identity, upload reference photos, and protect their likeness.",
     },
-  ];
-
-  const stats = [
-    { label: "Accuracy Rate", value: "95.8%" },
-    { label: "Videos Analyzed", value: "50K+" },
-    { label: "Response Time", value: "<2min" },
-    { label: "Formats Supported", value: "3" },
   ];
 
   return (
@@ -64,15 +57,15 @@ export default function Home() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-8">
-              Deepfake Detection using
+              Copyright Detection in
               <br />
-              <span className="text-primary-600">DeepCNN</span>
+              <span className="text-primary-600">Generative AI</span>
             </h1>
 
             <p className="text-xl sm:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto">
-              Protect yourself from manipulated media with our cutting-edge
-              deepfake detection system powered by advanced deep learning
-              techniques.
+              Protect creator rights and verify content authenticity with our
+              AI-powered system that detects copyright violations in
+              AI-generated media.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -125,33 +118,17 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-3xl sm:text-4xl font-bold text-primary-600 mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Features Section */}
       <section className="py-24 bg-gray-50 dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Why Choose Our Detection System?
+              Why Choose Our Copyright Detection System?
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Built with cutting-edge AI technology and designed for accuracy,
-              speed, and ease of use.
+              Empower creators with comprehensive protection against
+              unauthorized AI-generated content using their identity, backed by
+              cutting-edge technology.
             </p>
           </div>
 
@@ -182,8 +159,8 @@ export default function Home() {
               How It Works
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Simple three-step process to analyze your videos for deepfake
-              content.
+              Three-step process to verify content authenticity and detect
+              copyright violations in AI-generated media.
             </p>
           </div>
 
@@ -193,11 +170,11 @@ export default function Home() {
                 <span className="text-2xl font-bold text-primary-600">1</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                Upload Video
+                Upload Media
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
-                Drag and drop your video file or browse to select. We support
-                MP4, AVI, and MOV formats.
+                Upload your video or image for analysis. Our system supports
+                MP4, AVI, MOV, JPG, and PNG formats.
               </p>
             </div>
 
@@ -206,11 +183,12 @@ export default function Home() {
                 <span className="text-2xl font-bold text-primary-600">2</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                AI Analysis
+                Dual Analysis
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
-                Our advanced AI models analyze each frame for signs of
-                manipulation using deep learning techniques.
+                First, AI verifies content authenticity. Then, facial embeddings
+                are matched against our protected creator database for copyright
+                violations.
               </p>
             </div>
 
@@ -219,11 +197,11 @@ export default function Home() {
                 <span className="text-2xl font-bold text-primary-600">3</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                Get Results
+                Get Comprehensive Report
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
-                Receive detailed results with confidence scores and highlighted
-                suspicious frames.
+                Receive detailed results showing authenticity status, matched
+                identities, confidence scores, and licensing information.
               </p>
             </div>
           </div>
@@ -234,17 +212,17 @@ export default function Home() {
       <section className="py-20 bg-primary-600">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-            Ready to Detect Deepfakes?
+            Ready to Protect Creator Rights?
           </h2>
           <p className="text-xl text-primary-100 mb-8">
-            Start analyzing your videos today with our free detection service.
+            Start detecting copyright violations in AI-generated content today.
           </p>
           <Link href="/detect">
             <Button
               size="lg"
               className="bg-white text-primary-600 hover:bg-gray-100 text-lg px-8 py-4"
             >
-              Start Detection
+              Analyze Content
               <ArrowRight size={20} />
             </Button>
           </Link>

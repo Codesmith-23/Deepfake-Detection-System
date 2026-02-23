@@ -15,73 +15,74 @@ export default function AboutPage() {
   const technologies = [
     {
       icon: <Brain className="h-8 w-8 text-primary-600" />,
-      title: "Neural Networks",
+      title: "Facial Embeddings",
       description:
-        "Deep convolutional neural networks trained on millions of video frames to identify subtle manipulation patterns invisible to the human eye.",
+        "FaceNet and MobileNetV2 models generate 128-dimensional identity embeddings for precise matching against protected creator databases.",
     },
     {
       icon: <Eye className="h-8 w-8 text-primary-600" />,
-      title: "Facial Analysis",
+      title: "Identity Matching",
       description:
-        "Advanced facial landmark detection and temporal consistency analysis to spot inconsistencies in facial movements and expressions.",
+        "Cosine similarity algorithms compare facial embeddings with 96%+ accuracy to identify unauthorized use of protected identities.",
     },
     {
       icon: <Database className="h-8 w-8 text-primary-600" />,
-      title: "Training Datasets",
+      title: "Protected Entity Registry",
       description:
-        "Models trained on comprehensive datasets including FaceForensics++, DFDC, and CelebDF with diverse manipulation techniques.",
+        "Secure database storing creator identity embeddings, licensing information, and violation logs for comprehensive rights management.",
     },
     {
       icon: <Zap className="h-8 w-8 text-primary-600" />,
-      title: "Real-time Processing",
+      title: "Dual-Layer Detection",
       description:
-        "Optimized inference pipeline with GPU acceleration for fast analysis while maintaining high accuracy and precision.",
+        "XceptionNet authenticates content first, then identity matching runs on AI-generated media for copyright enforcement.",
     },
   ];
 
   const detectionMethods = [
     {
-      title: "Frame-by-Frame Analysis",
+      title: "Authenticity Verification",
       description:
-        "Each video frame is analyzed individually using XceptionNet and ResNet architectures to detect pixel-level inconsistencies and artifacts.",
+        "XceptionNet and ResNet architectures analyze video frames to determine if content is AI-generated or authentic before copyright checks.",
     },
     {
-      title: "Temporal Consistency",
+      title: "Face Detection & Extraction",
       description:
-        "Sequential frame analysis detects unnatural temporal patterns and inconsistencies that occur in generated videos.",
+        "Dlib HOG and OpenCV DNN models detect faces in flagged frames, extracting facial regions for embedding generation.",
     },
     {
-      title: "Frequency Domain Analysis",
+      title: "Embedding Comparison",
       description:
-        "Examination of frequency components and spectral analysis to identify compression artifacts and generation signatures.",
+        "128-dimensional facial vectors are compared against protected creator embeddings using cosine similarity with 0.60 threshold.",
     },
     {
-      title: "Ensemble Methods",
+      title: "Licensing Enforcement",
       description:
-        "Multiple detection models work together to provide robust and reliable deepfake identification with high confidence scores.",
+        "Matched identities trigger license validation, logging violations and providing detailed reports on unauthorized usage.",
     },
   ];
 
   const useCases = [
     {
       icon: <Shield className="h-6 w-6 text-primary-600" />,
-      title: "Media Verification",
-      description: "Verify authenticity of news videos and media content",
+      title: "Creator Protection",
+      description:
+        "Safeguard identities from unauthorized AI-generated content",
     },
     {
       icon: <Users className="h-6 w-6 text-primary-600" />,
-      title: "Social Media",
-      description: "Protect against misinformation and fake content",
+      title: "Rights Management",
+      description: "Enforce licensing agreements and track usage violations",
     },
     {
       icon: <Eye className="h-6 w-6 text-primary-600" />,
-      title: "Content Moderation",
-      description: "Automated detection for platform content review",
+      title: "Content Verification",
+      description: "Verify authenticity and provenance of digital media",
     },
     {
       icon: <Shield className="h-6 w-6 text-primary-600" />,
-      title: "Security & Forensics",
-      description: "Digital forensics and evidence verification",
+      title: "Brand Protection",
+      description: "Detect unauthorized use of celebrity and brand identities",
     },
   ];
 
@@ -92,81 +93,83 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-              About Our Deepfake Detection System
+              About Copyright Detection in Generative AI
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Advanced AI technology designed to identify manipulated videos and
-              protect against digital deception. Learn how our system works and
-              why it matters.
+              Advanced AI technology designed to protect creator identities from
+              unauthorized use in AI-generated content. Learn how our dual-layer
+              system works and why it matters for creator rights.
             </p>
           </div>
         </div>
       </section>
 
-      {/* What is Deepfake Detection */}
+      {/* What is Copyright Detection */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-                What is Deepfake Detection?
-              </h2>
-              <div className="space-y-4 text-gray-600 dark:text-gray-300">
-                <p>
-                  Deepfake detection is the process of identifying artificially
-                  generated or manipulated video content using machine learning
-                  and computer vision techniques. As deepfake technology becomes
-                  more sophisticated, detection systems must evolve to stay
-                  ahead.
-                </p>
-                <p>
-                  Our system analyzes multiple aspects of video content
-                  including facial inconsistencies, temporal artifacts,
-                  compression patterns, and pixel-level anomalies to determine
-                  the likelihood that a video has been artificially generated or
-                  manipulated.
-                </p>
-                <p>
-                  With the rise of accessible deepfake creation tools, reliable
-                  detection has become crucial for maintaining trust in digital
-                  media, preventing misinformation, and protecting individuals
-                  from malicious use of their likeness.
-                </p>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-6">
+              What is Copyright Detection in Generative AI?
+            </h2>
+          </div>
+
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-primary-100 dark:bg-primary-900/20 rounded-lg flex items-center justify-center">
+                  <Shield className="w-6 h-6 text-primary-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                    Protecting Creator Identities
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                    Copyright detection in generative AI identifies when
+                    protected creator identities are used without authorization
+                    in AI-generated content. Our system combines authenticity
+                    verification with identity matching to protect creator
+                    rights.
+                  </p>
+                </div>
               </div>
             </div>
 
             <div className="bg-white dark:bg-gray-800 p-8 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                Key Statistics
-              </h3>
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Detection Accuracy
-                  </span>
-                  <span className="font-semibold text-primary-600">95.8%</span>
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-blue-600" />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    False Positive Rate
-                  </span>
-                  <span className="font-semibold text-green-600">&lt; 2%</span>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                    Dual-Layer Detection Workflow
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                    The workflow starts by verifying if content is AI-generated
+                    using deepfake detection. For synthetic content, we extract
+                    facial embeddings and match them against our database of
+                    protected identities, checking for licensing violations and
+                    unauthorized usage.
+                  </p>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Processing Speed
-                  </span>
-                  <span className="font-semibold text-blue-600">
-                    &lt; 2 min
-                  </span>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                  <Users className="w-6 h-6 text-green-600" />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Supported Formats
-                  </span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
-                    MP4, AVI, MOV
-                  </span>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                    Empowering Creators
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                    With the widespread availability of generative AI tools,
+                    protecting creator identities has become critical. Our
+                    system empowers creators to register their likeness, enforce
+                    licensing agreements, and detect violations across digital
+                    platforms.
+                  </p>
                 </div>
               </div>
             </div>
@@ -179,11 +182,12 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Technologies Behind Detection
+              Technologies Behind Copyright Detection
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Our system combines cutting-edge AI techniques and proven computer
-              vision methods to achieve industry-leading detection accuracy.
+              Our system combines facial recognition, embedding matching, and
+              authenticity verification to achieve comprehensive creator
+              protection.
             </p>
           </div>
 
@@ -211,12 +215,12 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              How Detection Works
+              How Copyright Detection Works
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Our multi-layered approach examines videos from multiple
-              perspectives to identify even the most sophisticated deepfake
-              manipulations.
+              Our dual-layer approach first verifies authenticity, then matches
+              identities\n against protected creator databases to detect
+              violations.\n{" "}
             </p>
           </div>
 
@@ -246,8 +250,9 @@ export default function AboutPage() {
               Real-World Applications
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Our deepfake detection technology serves various industries and
-              use cases where content authenticity is critical.
+              Our copyright detection technology protects creators across
+              entertainment,\n media, and digital platforms where identity
+              rights are critical.\n{" "}
             </p>
           </div>
 
@@ -278,39 +283,38 @@ export default function AboutPage() {
           <div className="bg-primary-900 dark:bg-primary-950/20 border border-primary-200 dark:border-primary-800 rounded-xl p-8">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                Built on Scientific Research
+                Built on Advanced AI Technology
               </h2>
               <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-                Our detection system is based on peer-reviewed research and
-                state-of-the-art models including XceptionNet, EfficientNet, and
-                custom architectures specifically designed for deepfake
-                detection.
+                Our copyright detection system combines facial recognition
+                models, embedding matching algorithms, and deepfake detection
+                architectures to provide comprehensive creator protection.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white-600 mb-1">
+                    FaceNet/MobileNetV2
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    128-dimensional facial embeddings for identity matching
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white-600 mb-1">
                     XceptionNet
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Depthwise separable convolutions for feature extraction
+                    Deep CNN for authenticity verification and deepfake
+                    detection
                   </p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white-600 mb-1">
-                    FaceForensics++
+                    Cosine Similarity
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Comprehensive training dataset with multiple manipulation
-                    types
-                  </p>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white-600 mb-1">
-                    Ensemble Learning
-                  </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Multiple models combined for robust detection
+                    High-accuracy identity matching with 0.60 threshold
                   </p>
                 </div>
               </div>
@@ -318,7 +322,7 @@ export default function AboutPage() {
               <div className="text-center">
                 <Link href="/detect">
                   <Button size="lg">
-                    Try Detection System
+                    Analyze Content
                     <ArrowRight size={20} />
                   </Button>
                 </Link>
@@ -333,50 +337,50 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Limitations & Ethical Considerations
+              System Limitations & Privacy
             </h2>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-6">
               <h3 className="text-xl font-semibold text-amber-800 dark:text-amber-200 mb-4">
-                Important Limitations
+                System Limitations
               </h3>
               <ul className="space-y-2 text-amber-700 dark:text-amber-300">
                 <li>
-                  • Detection accuracy may vary with video quality and
-                  compression
+                  • Identity matching accuracy depends on reference photo
+                  quality
                 </li>
                 <li>
-                  • New deepfake techniques may temporarily evade detection
+                  • New generative AI techniques may temporarily evade detection
                 </li>
                 <li>
-                  • Results should be part of comprehensive verification process
+                  • Cosine similarity threshold may produce false matches in
+                  edge cases
                 </li>
                 <li>
-                  • False positives can occur with heavily processed legitimate
-                  videos
+                  • Results should be combined with human review for enforcement
                 </li>
               </ul>
             </div>
 
             <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
               <h3 className="text-xl font-semibold text-blue-800 dark:text-blue-200 mb-4">
-                Ethical Use Guidelines
+                Privacy & Ethics
               </h3>
               <ul className="space-y-2 text-blue-700 dark:text-blue-300">
                 <li>
-                  • Use detection results responsibly and with human oversight
+                  • Creator embeddings are stored securely and used only for
+                  protection
                 </li>
                 <li>
-                  • Consider privacy implications when analyzing personal
-                  content
+                  • Uploaded content is analyzed and not permanently stored
                 </li>
                 <li>
-                  • Avoid using results for harassment or malicious purposes
+                  • Creators can delete their protected identity at any time
                 </li>
                 <li>
-                  • Report false positives/negatives to help improve the system
+                  • System designed to empower creators, not surveil or censor
                 </li>
               </ul>
             </div>

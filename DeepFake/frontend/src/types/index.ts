@@ -22,6 +22,24 @@ export interface VideoAnalysis {
   conf?: number;
 }
 
+export interface MatchedEntity {
+  entity_id: string;
+  name: string;
+  type: "creator" | "celebrity" | "brand_character";
+  confidence: number;
+}
+
+export interface CopyrightViolation {
+  violation_detected: boolean;
+  matched_entity?: MatchedEntity;
+  license_status?: "authorized" | "unauthorized" | "unknown";
+  violation_type?:
+    | "unauthorized_likeness"
+    | "unknown_rights"
+    | "synthetic_but_unregistered";
+  reason?: string;
+}
+
 export interface DetectionResult {
   id?: string;
   filename?: string;
@@ -54,6 +72,9 @@ export interface DetectionResult {
     confidence?: number;
     label?: string;
   }>;
+
+  // Copyright violation detection (Phase 3)
+  copyright_check?: CopyrightViolation;
 }
 
 // ==========================================

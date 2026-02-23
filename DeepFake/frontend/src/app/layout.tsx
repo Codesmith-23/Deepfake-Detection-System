@@ -15,10 +15,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Deepfake Video Detection System",
-  description: "Advanced AI-powered deepfake detection system to identify manipulated videos and protect against digital deception.",
-  keywords: "deepfake detection, AI, video analysis, security, fraud prevention",
-  authors: [{ name: "DeepDetect Team" }],
+  title: "Copyright Detection in Generative AI",
+  description:
+    "Advanced AI-powered system to detect copyright violations in generative AI content. Protect creator identities from unauthorized use in AI-generated media with facial recognition and provenance tracking.",
+  keywords:
+    "copyright detection, generative AI, identity protection, deepfake detection, AI content, creator rights, facial recognition, provenance",
+  authors: [{ name: "Copyright Detection Team" }],
   viewport: "width=device-width, initial-scale=1",
   robots: "index, follow",
 };
@@ -38,9 +40,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <Header />
-        <main className="flex-1">
-          {children}
-        </main>
+        <main className="flex-1">{children}</main>
         <Footer />
       </body>
     </html>
