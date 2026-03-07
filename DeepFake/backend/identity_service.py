@@ -22,6 +22,14 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
+# Import keras-facenet for face embeddings
+try:
+    from keras_facenet import FaceNet
+    FACENET_AVAILABLE = True
+except ImportError:
+    FACENET_AVAILABLE = False
+    print("[WARNING] keras-facenet not installed. Install with: pip install keras-facenet")
+
 app = Flask(__name__)
 CORS(app)
 
@@ -47,18 +55,27 @@ def load_facenet_model():
     """Load FaceNet model for embedding extraction."""
     global facenet_model
     try:
-        if os.path.exists(FACENET_MODEL_PATH):
+        # Try keras-facenet first (recommended)
+        if FACENET_AVAILABLE:
+            print("[FaceNet] Loading keras-facenet model...")
+            facenet_model = FaceNet()
+            print("[FaceNet] keras-facenet model loaded successfully (512-dim embeddings)")
+            return facenet_model
+        # Try loading from local file
+        elif os.path.exists(FACENET_MODEL_PATH):
             print(f"[FaceNet] Loading from {FACENET_MODEL_PATH}")
             facenet_model = load_model(FACENET_MODEL_PATH, custom_objects={'tf': tf})
+            print("[FaceNet] Model loaded successfully")
+            return facenet_model
         else:
-            print("[FaceNet] Model not found locally. Using pre-trained from TensorFlow Hub...")
-            # Alternative: use tensorflow_hub for a pre-trained FaceNet
-            # For MVP, we'll use a simple face embedding model
+            print("[FaceNet] keras-facenet not available, using fallback embedding model...")
             facenet_model = _load_simple_embedding_model()
-        print("[FaceNet] Model loaded successfully")
-        return facenet_model
+            print("[FaceNet] Fallback model loaded (MobileNetV2-based)")
+            return facenet_model
     except Exception as e:
         print(f"[ERROR] Failed to load FaceNet: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def _load_simple_embedding_model():
@@ -240,18 +257,29 @@ def compute_embedding(face_image):
     Returns: 1D numpy array of embeddings
     """
     try:
-        # Normalize face image
-        face_array = np.array(face_image, dtype=np.float32) / 255.0
-        face_array = face_array.reshape(1, 160, 160, 3)
+        if facenet_model is None:
+            print("[ERROR] No model available for embedding computation")
+            return None
         
-        if facenet_model:
-            embedding = facenet_model.predict(face_array, verbose=0)
+        # keras-facenet uses standardization (not just normalization)
+        if FACENET_AVAILABLE and isinstance(facenet_model, FaceNet):
+            # keras-facenet expects (160, 160, 3) and handles preprocessing internally
+            face_array = np.array(face_image, dtype=np.float32)
+            face_array = face_array.reshape(1, 160, 160, 3)
+            # Standardize: (pixel - mean) / std
+            face_array = (face_array - 127.5) / 128.0
+            embedding = facenet_model.embeddings(face_array)
             return embedding[0]
         else:
-            # Fallback: random embedding (for testing without model)
-            return np.random.rand(128)
+            # Fallback model (MobileNetV2) uses simple normalization
+            face_array = np.array(face_image, dtype=np.float32) / 255.0
+            face_array = face_array.reshape(1, 160, 160, 3)
+            embedding = facenet_model.predict(face_array, verbose=0)
+            return embedding[0]
     except Exception as e:
         print(f"[ERROR] Embedding computation failed: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def similarity_score(embedding1, embedding2):
