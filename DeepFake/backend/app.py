@@ -353,9 +353,11 @@ def predict_media():
             confidence = audio_data.get('confidence', 0)
             save_result(user_id, analysisID, filename, result, confidence, file_size)
             
+            # Note: Audio files don't have face detection, so no copyright check
             return jsonify({
                 "type": "audio", "result": result, "confidence": confidence,
-                "audio_analysis": audio_data, "flaggedFrames": []
+                "audio_analysis": audio_data, "flaggedFrames": [],
+                "copyright_check": {"violation_detected": False, "reason": "audio_only_no_face_matching"}
             })
 
         # --- B. VIDEO FILE ---
@@ -427,13 +429,109 @@ def predict_media():
             
             save_result(user_id, analysisID, filename, final_result, final_conf, file_size)
             
+            # ==========================================
+            # PHASE 3: COPYRIGHT VIOLATION DETECTION
+            # ==========================================
+            # Initialize with default "no violation" status
+            copyright_violation = {
+                "violation_detected": False,
+                "reason": "authentic_content" if final_result == "authentic" else "no_flagged_frames"
+            }
+            
+            if final_result == "deepfake" and len(flagged_frames) > 0:
+                print(f"[Phase 3] Synthetic content detected. Checking for copyright violations...")
+                
+                try:
+                    # Extract face from first flagged frame for identity matching
+                    flagged_frame_path = flagged_frames[0].lstrip('/')
+                    full_flagged_frame_path = os.path.join(BASE_DIR, "uploads", flagged_frame_path)
+                    
+                    if os.path.exists(full_flagged_frame_path):
+                        # Read the flagged frame
+                        frame_image = cv2.imread(full_flagged_frame_path)
+                        
+                        if frame_image is not None:
+                            # Encode to base64 for identity service
+                            _, frame_encoded = cv2.imencode('.jpg', frame_image)
+                            import base64
+                            frame_b64 = base64.b64encode(frame_encoded).decode('utf-8')
+                            
+                            # Call identity service to match identity
+                            print(f"[Phase 3] Calling identity service to match against protected identities...")
+                            identity_response = requests.post(
+                                "http://127.0.0.1:5002/match_identity",
+                                json={"image": frame_b64, "threshold": 0.60},
+                                timeout=30
+                            )
+                            
+                            if identity_response.status_code == 200:
+                                identity_data = identity_response.json()
+                                
+                                if identity_data.get("match_found"):
+                                    matched_entity = identity_data.get("matched_entity", {})
+                                    license_status = identity_data.get("license_status", "unknown")
+                                    
+                                    print(f"[Phase 3] MATCH FOUND: {matched_entity.get('name')} ({matched_entity.get('entity_id')})")
+                                    print(f"[Phase 3] License Status: {license_status}")
+                                    
+                                    # Log violation
+                                    try:
+                                        with sqlite3.connect("database.db") as conn:
+                                            c = conn.cursor()
+                                            c.execute("""
+                                                INSERT INTO violation_logs (analysis_id, entity_id, matched_confidence, violation_type, flagged_frame_path, timestamp)
+                                                VALUES (?, ?, ?, ?, ?, ?)
+                                            """, (
+                                                analysisID,
+                                                matched_entity.get('entity_id'),
+                                                matched_entity.get('confidence', 0),
+                                                "unauthorized_likeness" if license_status == "unauthorized" else "unknown_rights",
+                                                flagged_frames[0],
+                                                datetime.now().isoformat()
+                                            ))
+                                            conn.commit()
+                                    except Exception as e:
+                                        print(f"[ERROR] Failed to log violation: {e}")
+                                    
+                                    # Build copyright violation response
+                                    copyright_violation = {
+                                        "violation_detected": True,
+                                        "matched_entity": matched_entity,
+                                        "license_status": license_status,
+                                        "violation_type": "unauthorized_likeness" if license_status == "unauthorized" else "unknown_rights"
+                                    }
+                                else:
+                                    # No match found
+                                    print(f"[Phase 3] No protected identity matched (score: {identity_data.get('closest_match_score', 0):.2f})")
+                                    copyright_violation = {
+                                        "violation_detected": False,
+                                        "reason": "synthetic_but_unregistered"
+                                    }
+                            else:
+                                print(f"[Phase 3] Identity service error: {identity_response.status_code}")
+                        else:
+                            print(f"[Phase 3] Could not read flagged frame")
+                    else:
+                        print(f"[Phase 3] Flagged frame not found: {full_flagged_frame_path}")
+                
+                except Exception as e:
+                    print(f"[Phase 3] Error during copyright check: {e}")
+                    traceback.print_exc()
+            
             # Note: We do NOT delete flagged_frames here. They stay until the NEXT request starts.
             
-            return jsonify({
-                "type": "video", "result": final_result, "confidence": round(final_conf, 2),
+            # Build response with copyright information
+            response_data = {
+                "type": "video", 
+                "result": final_result, 
+                "confidence": round(final_conf, 2),
                 "video_analysis": {"label": video_result, "conf": video_conf},
-                "audio_analysis": audio_data, "flaggedFrames": flagged_frames[:3] if final_result == "deepfake" else []
-            })
+                "audio_analysis": audio_data, 
+                "flaggedFrames": flagged_frames[:3] if final_result == "deepfake" else [],
+                "copyright_check": copyright_violation
+            }
+            
+            return jsonify(response_data)
 
     except Exception as e:
         traceback.print_exc()
@@ -486,6 +584,299 @@ def delete_result(result_id):
             conn.commit()
         return jsonify({"message": "Result deleted successfully"})
     except Exception as e: return jsonify({"error": str(e)}), 500
+
+# ==========================================
+# CREATOR REGISTRATION ROUTES (Phase 2)
+# ==========================================
+
+@app.route("/creators/register", methods=["POST"])
+def register_creator():
+    """
+    Register a new creator/identity for copyright protection.
+    
+    Request:
+    {
+        "name": "John Doe",
+        "email": "john@example.com",
+        "type": "creator" | "celebrity" | "brand_character",
+        "consent": true
+    }
+    
+    Response:
+    {
+        "entity_id": "creator_abc123",
+        "message": "Registration successful",
+        "next_step": "upload-references"
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        # Validate input
+        required_fields = ["name", "email", "type", "consent"]
+        if not data or not all(k in data for k in required_fields):
+            return jsonify({"error": f"Missing required fields: {required_fields}"}), 400
+        
+        name = data["name"].strip()
+        email = data["email"].strip().lower()
+        creator_type = data["type"]
+        consent = data.get("consent", False)
+        
+        # Validate
+        if not name or len(name) < 2:
+            return jsonify({"error": "Name must be at least 2 characters"}), 400
+        
+        if '@' not in email or '.' not in email:
+            return jsonify({"error": "Invalid email format"}), 400
+        
+        if creator_type not in ["creator", "celebrity", "brand_character"]:
+            return jsonify({"error": "Invalid type. Must be: creator, celebrity, brand_character"}), 400
+        
+        if not consent:
+            return jsonify({"error": "Consent to biometric data storage is required"}), 400
+        
+        # Generate entity_id
+        entity_id = f"creator_{uuid.uuid4().hex[:8]}"
+        timestamp = datetime.now().isoformat()
+        
+        # Call identity service to register
+        try:
+            # For now, just create the entity. Images will be uploaded separately.
+            # The identity service will create the entry when first image is uploaded.
+            print(f"[CREATOR] Registering: {name} ({entity_id})")
+            
+            return jsonify({
+                "success": True,
+                "entity_id": entity_id,
+                "message": "Registration successful. Please upload reference images.",
+                "next_step": "upload-references"
+            }), 201
+        
+        except Exception as e:
+            print(f"[ERROR] Identity service error: {e}")
+            return jsonify({"error": "Failed to register with identity service"}), 500
+    
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/creators/upload-reference", methods=["POST"])
+def upload_reference():
+    """
+    Upload reference images/videos for a creator.
+    These will be processed to extract face embeddings.
+    
+    Request:
+    multipart/form-data
+    {
+        "entity_id": "creator_abc123",
+        "files": [image1.jpg, image2.jpg, ...]
+    }
+    
+    Response:
+    {
+        "success": true,
+        "entity_id": "creator_abc123",
+        "embeddings_stored": 3,
+        "status": "active"
+    }
+    """
+    try:
+        entity_id = request.form.get("entity_id")
+        
+        if not entity_id:
+            return jsonify({"error": "Missing entity_id"}), 400
+        
+        if "files" not in request.files:
+            return jsonify({"error": "No files provided"}), 400
+        
+        files = request.files.getlist("files")
+        if not files or len(files) == 0:
+            return jsonify({"error": "At least one file is required"}), 400
+        
+        embeddings_stored = 0
+        errors = []
+        
+        for file in files:
+            if file.filename == "":
+                continue
+            
+            try:
+                # Read file data
+                file_data = file.read()
+                
+                # Encode to base64 for identity service
+                import base64
+                image_b64 = base64.b64encode(file_data).decode('utf-8')
+                
+                # Call identity service to register identity
+                identity_response = requests.post(
+                    "http://127.0.0.1:5002/register_identity",
+                    json={
+                        "entity_id": entity_id,
+                        "name": entity_id.replace("creator_", "").replace("_", " ").title(),
+                        "type": "creator",
+                        "image": image_b64
+                    },
+                    timeout=30
+                )
+                
+                if identity_response.status_code in [201, 200]:
+                    embeddings_stored += 1
+                    print(f"[UPLOAD] Embedding stored for {entity_id}: {file.filename}")
+                else:
+                    error_msg = identity_response.json().get("error", "Unknown error")
+                    errors.append(f"{file.filename}: {error_msg}")
+                    print(f"[ERROR] Failed to register {file.filename}: {error_msg}")
+            
+            except Exception as e:
+                error_msg = f"Failed to process {file.filename}: {str(e)}"
+                errors.append(error_msg)
+                print(f"[ERROR] {error_msg}")
+        
+        if embeddings_stored == 0:
+            return jsonify({
+                "success": False,
+                "error": "No embeddings could be stored",
+                "details": errors
+            }), 400
+        
+        return jsonify({
+            "success": True,
+            "entity_id": entity_id,
+            "embeddings_stored": embeddings_stored,
+            "status": "active",
+            "errors": errors if errors else None
+        }), 200
+    
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/creators/profile/<entity_id>", methods=["GET"])
+def get_creator_profile(entity_id):
+    """
+    Get creator profile and registration status.
+    
+    Response:
+    {
+        "entity_id": "creator_abc123",
+        "protection_status": "active",
+        "registered_references": 3,
+        "matches_found": 0
+    }
+    """
+    try:
+        # Call identity service to get profile
+        response = requests.get(
+            "http://127.0.0.1:5002/list_identities",
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            identities = response.json().get("identities", [])
+            
+            # Find this creator
+            creator = next((c for c in identities if c["entity_id"] == entity_id), None)
+            
+            if not creator:
+                return jsonify({
+                    "error": "Creator not found"
+                }), 404
+            
+            return jsonify({
+                "entity_id": creator["entity_id"],
+                "name": creator["name"],
+                "type": creator["type"],
+                "status": "active" if creator["is_active"] else "inactive",
+                "registered_references": creator.get("embedding_count", 0),
+                "created_at": creator["created_at"],
+                "protection_status": "active" if creator["is_active"] and creator.get("embedding_count", 0) > 0 else "pending"
+            }), 200
+        else:
+            return jsonify({"error": "Failed to fetch creator profile"}), 500
+    
+    except Exception as e:
+        print(f"[ERROR] Failed to get profile for {entity_id}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/creators/<entity_id>", methods=["DELETE"])
+def delete_creator(entity_id):
+    """
+    Delete a creator and all their data (right to be forgotten).
+    
+    Response:
+    {
+        "success": true,
+        "message": "Creator deleted successfully"
+    }
+    """
+    try:
+        # Call identity service to delete
+        response = requests.delete(
+            f"http://127.0.0.1:5002/delete_identity/{entity_id}",
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            return jsonify({
+                "success": True,
+                "message": f"Creator {entity_id} deleted successfully"
+            }), 200
+        else:
+            return jsonify({"error": "Failed to delete creator"}), 500
+    
+    except Exception as e:
+        print(f"[ERROR] Failed to delete {entity_id}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/creators/list", methods=["GET"])
+def list_creators():
+    """
+    List all registered creators (admin view).
+    
+    Response:
+    {
+        "total": 5,
+        "creators": [
+            {
+                "entity_id": "creator_001",
+                "name": "John Doe",
+                "type": "creator",
+                "status": "active",
+                "references": 3
+            }
+        ]
+    }
+    """
+    try:
+        response = requests.get(
+            "http://127.0.0.1:5002/list_identities",
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            return jsonify({
+                "total": data.get("total", 0),
+                "creators": [
+                    {
+                        "entity_id": c["entity_id"],
+                        "name": c["name"],
+                        "type": c["type"],
+                        "status": "active" if c["is_active"] else "inactive",
+                        "references": c.get("embedding_count", 0),
+                        "created_at": c["created_at"]
+                    }
+                    for c in data.get("identities", [])
+                ]
+            }), 200
+        else:
+            return jsonify({"error": "Failed to list creators"}), 500
+    
+    except Exception as e:
+        print(f"[ERROR] Failed to list creators: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=False, port=5000)

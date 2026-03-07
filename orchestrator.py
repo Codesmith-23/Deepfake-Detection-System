@@ -101,21 +101,26 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
 
     print(" PRE-FLIGHT CHECK: Clearing ports...")
+    kill_process_on_port(5002) # Identity Service
     kill_process_on_port(5001) # Audio
     kill_process_on_port(5000) # Video
     kill_process_on_port(3000) # Frontend
 
     print("\n Ports clear. Launching services...\n")
 
-    # 1. Start Audio
+    # 1. Start Identity Service (Phase 1 - Copyright Detection Infrastructure)
+    start_service("Identity Service (Copyright Detection)", [VIDEO_PYTHON, "identity_service.py"], VIDEO_DIR)
+    time.sleep(2)
+
+    # 2. Start Audio API
     start_service("Audio API", [AUDIO_PYTHON, "api_audio.py"], AUDIO_DIR)
     time.sleep(1)
 
-    # 2. Start Video
-    start_service("Video API", [VIDEO_PYTHON, "app.py"], VIDEO_DIR)
-    time.sleep(1)
+    # 3. Start Video Backend (integrates with Identity Service for Phase 3)
+    start_service("Video Backend API", [VIDEO_PYTHON, "app.py"], VIDEO_DIR)
+    time.sleep(2)
 
-    # 3. Start Frontend
+    # 4. Start Frontend
     npm_cmd = "npm.cmd" if sys.platform == "win32" else "npm"
     start_service("Frontend", [npm_cmd, "run", "dev"], FRONTEND_DIR)
 

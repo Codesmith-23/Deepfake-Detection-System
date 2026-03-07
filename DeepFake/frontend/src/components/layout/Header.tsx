@@ -3,14 +3,13 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, Shield, Moon, Sun, LogOut, User } from "lucide-react";
+import { Menu, X, Shield, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { authService } from "@/lib/auth";
 import type { User as UserType } from "@/types";
 
 const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [user, setUser] = useState<UserType | null>(null);
   const pathname = usePathname();
   const router = useRouter();
@@ -24,6 +23,11 @@ const Header: React.FC = () => {
   const navigation = [
     { name: "Home", href: "/", authRequired: false },
     { name: "Detect", href: "/detect", authRequired: true },
+    {
+      name: "Protect Identity",
+      href: "/creator-registration",
+      authRequired: true,
+    },
     { name: "About", href: "/about", authRequired: false },
     { name: "History", href: "/history", authRequired: true },
     { name: "Contact", href: "/contact", authRequired: false },
@@ -36,12 +40,6 @@ const Header: React.FC = () => {
     authService.logout();
     setUser(null);
     router.push("/");
-  };
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    // Here you would typically also update the document class or a global state
-    document.documentElement.classList.toggle("dark");
   };
 
   return (
@@ -109,21 +107,11 @@ const Header: React.FC = () => {
             )}
           </nav>
 
-          {/* Dark Mode Toggle & Mobile Menu Button */}
-          <div className="flex items-center space-x-2">
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={toggleDarkMode}
-              className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="Toggle dark mode"
-            >
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-
-            {/* Mobile Menu Button */}
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               aria-label="Toggle mobile menu"
             >
               {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}

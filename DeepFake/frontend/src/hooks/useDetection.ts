@@ -57,6 +57,9 @@ export function useDetection() {
         video_analysis: response.video_analysis,
         audio_analysis: response.audio_analysis,
 
+        // ✅ Copyright check (Phase 3)
+        copyright_check: response.copyright_check,
+
         // ✅ Evidence arrays with proper URL formatting
         flaggedFrames:
           response.flaggedFrames?.map((frame: any) => {
@@ -81,6 +84,7 @@ export function useDetection() {
       };
 
       console.log("✅ DETECTION RESULT CREATED:", detectionResult);
+      console.log("📋 Copyright Check Field:", detectionResult.copyright_check);
       setResult(detectionResult);
       setUploadProgress({
         progress: 100,
