@@ -248,7 +248,7 @@ def predict(file_path):
     try:
         model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
     except FileNotFoundError:
-        print(f"❌ Error: Model file '{MODEL_PATH}' not found!")
+        print(f" Error: Model file '{MODEL_PATH}' not found!")
         return
 
     model.eval()
@@ -278,7 +278,7 @@ def predict(file_path):
         
         # Display analysis
         print("\n" + "="*50)
-        print(f" File: {os.path.basename(file_path)}")
+        print(f"🎤 File: {os.path.basename(file_path)}")
         print("="*50)
         print(f" Chunks: {confidence['num_filtered']} total, {confidence['num_active']} active")
         print(f" Statistics (Active Chunks):")
@@ -289,7 +289,7 @@ def predict(file_path):
         print(f"   Top-3 Average: {stats['top3_mean']*100:.1f}%")
         
         if patterns['has_spikes']:
-            print(f"🔺 Spike Detection: {patterns['num_spikes']} spikes found (max: {patterns['spike_score']*100:.1f}%)")
+            print(f" Spike Detection: {patterns['num_spikes']} spikes found (max: {patterns['spike_score']*100:.1f}%)")
         if patterns['has_plateau']:
             print(f" Plateau Detection: {patterns['plateau_length']} consecutive suspicious chunks ({patterns['plateau_score']*100:.1f}%)")
         
@@ -361,4 +361,4 @@ if __name__ == "__main__":
     if os.path.exists(path):
         predict(path)
     else:
-        print(f"\n❌ Error: File not found at path: {path}")
+        print(f"\n Error: File not found at path: {path}")

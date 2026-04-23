@@ -11,6 +11,9 @@ __pycache__/
 # Database (Don't push your local history)
 *.db
 *.sqlite3
+backend/database.db-shm
+backend/database.db-wal
+
 
 # Large Data & Uploads (Crucial to ignore these!)
 backend/uploads/
@@ -35,3 +38,6 @@ dist/
 # Environment variables
 .env
 .env.local
+
+#Helpers
+backend/helpers/

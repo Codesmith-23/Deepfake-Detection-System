@@ -163,16 +163,19 @@ export default function CreatorRegistrationPage() {
     setUploadData({ ...uploadData, uploading: true, uploadMessage: "" });
 
     try {
-      const formData = new FormData();
-      formData.append("entity_id", uploadData.entityId);
+      const formDataToSend = new FormData(); // Renamed to avoid conflict with state 'formData'
+      formDataToSend.append("entity_id", uploadData.entityId);
+      
+      // ADD THIS LINE RIGHT HERE:
+      formDataToSend.append("name", formData.name); 
 
       for (let i = 0; i < uploadData.files.length; i++) {
-        formData.append("files", uploadData.files[i]);
+        formDataToSend.append("files", uploadData.files[i]);
       }
 
       const response = await fetch(`${BACKEND_URL}/creators/upload-reference`, {
         method: "POST",
-        body: formData,
+        body: formDataToSend,
       });
 
       if (!response.ok) {

@@ -20,3 +20,6 @@ uploads/
 # --- IDE Settings ---
 .vscode/
 .idea/
+
+#Helpers
+helpers/
