@@ -8,12 +8,12 @@ import threading
 # ==============================================================================
 #  CONFIGURATION
 # ==============================================================================
-AUDIO_PYTHON = r"C:\Users\Abubakkar\DF-vF\Deepfake-Detection-System\Voice Deepfake\venv\Scripts\python.exe"
-VIDEO_PYTHON = r"C:\Users\Abubakkar\DF-vF\Deepfake-Detection-System\DeepFake\backend\venv\Scripts\python.exe"
+AUDIO_PYTHON = r"C:\Users\Moinuddin_Projects\exp-versions\Voice Deepfake\.venv\Scripts\python.exe"
+VIDEO_PYTHON = r"C:\Users\Moinuddin_Projects\exp-versions\DeepFake\backend\.venv\Scripts\python.exe"
 
-AUDIO_DIR = r"C:\Users\Abubakkar\DF-vF\Deepfake-Detection-System\Voice Deepfake"
-VIDEO_DIR = r"C:\Users\Abubakkar\DF-vF\Deepfake-Detection-System\DeepFake\backend"
-FRONTEND_DIR = r"C:\Users\Abubakkar\DF-vF\Deepfake-Detection-System\DeepFake\frontend"
+AUDIO_DIR = r"C:\Users\Moinuddin_Projects\exp-versions\Voice Deepfake"
+VIDEO_DIR = r"C:\Users\Moinuddin_Projects\exp-versions\Deepfake\backend"
+FRONTEND_DIR = r"C:\Users\Moinuddin_Projects\exp-versions\Deepfake\frontend"
 # ==============================================================================
 
 # Global list to track processes for cleanup

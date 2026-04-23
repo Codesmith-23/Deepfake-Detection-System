@@ -83,7 +83,7 @@ class ResNetLSTM(nn.Module):
 
 # 3. TRAINING LOOP
 if __name__ == "__main__":
-    print(f"🚀 Powering up {DEVICE} for ResNet-LSTM Training...")
+    print(f" Powering up {DEVICE} for ResNet-LSTM Training...")
     
     # Dataset
     dataset = ProcessedDataset(CSV_PATH)
@@ -144,6 +144,6 @@ if __name__ == "__main__":
         if val_acc > best_acc:
             best_acc = val_acc
             torch.save(model.state_dict(), "deepfake_model_resnet_lstm.pth")
-            print("   💾 Model Saved!")
+            print(" Model Saved!")
 
-    print("🎉 Done! Best Model: deepfake_model_resnet_lstm.pth")
+    print(" Done! Best Model: deepfake_model_resnet_lstm.pth")
