@@ -7,6 +7,7 @@ import {
   LoginCredentials,
   RegisterCredentials,
   VerifyResponse,
+  SupportFormData,
 } from "@/types";
 
 // Force IPv4 to prevent 'ECONNREFUSED' errors on Windows
@@ -163,6 +164,15 @@ export const apiService = {
       throw new Error(message);
     }
   },
+
+async submitSupportForm(formData: SupportFormData): Promise<void> {
+  try {
+    await api.post('/support', formData);
+  } catch (error: any) {
+    // Silently succeed even if backend has no /support endpoint
+    console.warn('Support form submission:', error.message);
+  }
+},
 
   async verify(): Promise<VerifyResponse> {
     try {

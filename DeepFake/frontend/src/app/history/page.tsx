@@ -367,7 +367,7 @@ function HistoryPage() {
                           </td>
                           <td className="px-6 py-4">
                             <span className="text-sm text-gray-600 dark:text-gray-400">
-                              {formatFileSize(entry.file_size)}
+                              {formatFileSize(Number(entry.file_size))}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
@@ -457,7 +457,7 @@ function HistoryPage() {
 
                       <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
                         <span>{formatDate(entry.timestamp)}</span>
-                        <span>{formatFileSize(entry.file_size)}</span>
+                        <span>{formatFileSize(Number(entry.file_size))}</span>
                       </div>
                     </div>
                   ))}
@@ -490,7 +490,7 @@ function HistoryPage() {
                     File Size
                   </h4>
                   <p className="text-lg font-medium text-gray-900 dark:text-white">
-                    {formatFileSize(selectedEntry.file_size)}
+                    {formatFileSize(Number(selectedEntry.file_size))}
                   </p>
                 </div>
                 <div>

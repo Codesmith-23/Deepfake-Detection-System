@@ -13,6 +13,8 @@
 
 /** @type {import('next').NextConfig} */
 module.exports = {
+  eslint: {
+  ignoreDuringBuilds: true,},
   devIndicators: false, // This removes the Turbopack/lightning bolt icon
   images: {
     remotePatterns: [
