@@ -189,3 +189,12 @@ export interface VerifyResponse {
     username: string;
   };
 }
+
+// Add this anywhere in the types file
+export interface SupportFormData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  type: 'general' | 'technical' | 'false_positive' | 'false_negative';
+}

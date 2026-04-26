@@ -4,6 +4,7 @@ import os
 import signal
 import sys
 import threading
+import shutil
 
 # ==============================================================================
 #  CONFIGURATION
@@ -15,6 +16,9 @@ AUDIO_DIR = r"C:\Users\Moinuddin_Projects\exp-versions\Voice Deepfake"
 VIDEO_DIR = r"C:\Users\Moinuddin_Projects\exp-versions\Deepfake\backend"
 FRONTEND_DIR = r"C:\Users\Moinuddin_Projects\exp-versions\Deepfake\frontend"
 # ==============================================================================
+
+# FRONTEND_MODE = "dev"   # hot reload, red overlays
+FRONTEND_MODE = "prod"  # clean UI, no error screens ← use for demo
 
 # Global list to track processes for cleanup
 processes = []
@@ -41,7 +45,7 @@ def kill_process_on_port(port):
             try:
                 for con in proc.net_connections():
                     if con.laddr.port == port:
-                        print(f"🧹 Port {port} is blocked by PID {proc.pid} ({proc.info['name']}) -> KILLING...")
+                        print(f" Port {port} is blocked by PID {proc.pid} ({proc.info['name']}) -> KILLING...")
                         proc.kill()
                         killed = True
             except (psutil.NoSuchProcess, psutil.AccessDenied):
@@ -51,6 +55,8 @@ def kill_process_on_port(port):
     
     if killed:
         time.sleep(1) # Give OS time to release port
+
+import shutil
 
 def cleanup():
     """Kills all started processes."""
@@ -66,11 +72,24 @@ def cleanup():
                 p.terminate()
         except:
             pass
-            
-    # 2. Final sweep of ports just in case
+
+    # 2. Wipe flagged frames folder directly
+    frames_dir = os.path.join(VIDEO_DIR, "uploads", "flagged_frames")
+    if os.path.exists(frames_dir):
+        for f in os.listdir(frames_dir):
+            file_path = os.path.join(frames_dir, f)
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                print(f" Could not delete {f}: {e}")
+        print(f" Flagged frames cleared: {frames_dir}")
+
+    # 3. Final sweep of ports just in case
     kill_process_on_port(3000)
     kill_process_on_port(5000)
     kill_process_on_port(5001)
+    kill_process_on_port(5002)
+
 
 def signal_handler(sig, frame):
     cleanup()
@@ -122,9 +141,18 @@ if __name__ == "__main__":
 
     # 4. Start Frontend
     npm_cmd = "npm.cmd" if sys.platform == "win32" else "npm"
-    start_service("Frontend", [npm_cmd, "run", "dev"], FRONTEND_DIR)
 
-    print("\n SYSTEM ONLINE. Press Ctrl+C to stop.\n")
+    if FRONTEND_MODE == "prod":
+        print(" Building frontend for production (this takes ~30s)...")
+        result = subprocess.run([npm_cmd, "run", "build"], cwd=FRONTEND_DIR, shell=True)
+        if result.returncode != 0:
+            print(" Frontend build FAILED. Check errors above. Falling back to dev mode...")
+            start_service("Frontend (Dev - fallback)", [npm_cmd, "run", "dev"], FRONTEND_DIR)
+        else:
+            print(" Build successful. Starting production server...")
+            start_service("Frontend (Production)", [npm_cmd, "start"], FRONTEND_DIR)
+    else:
+        start_service("Frontend (Dev)", [npm_cmd, "run", "dev"], FRONTEND_DIR)
     
     # Keep alive loop
     try:
