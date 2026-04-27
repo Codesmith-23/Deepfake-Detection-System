@@ -9,12 +9,12 @@ import shutil
 # ==============================================================================
 #  CONFIGURATION
 # ==============================================================================
-AUDIO_PYTHON = r"C:\Users\Moinuddin_Projects\exp-versions\Voice Deepfake\.venv\Scripts\python.exe"
-VIDEO_PYTHON = r"C:\Users\Moinuddin_Projects\exp-versions\DeepFake\backend\.venv\Scripts\python.exe"
+AUDIO_PYTHON = r"C:\...\Voice Deepfake\.venv\Scripts\python.exe"
+VIDEO_PYTHON = r"C:\...\DeepFake\backend\.venv\Scripts\python.exe"
 
-AUDIO_DIR = r"C:\Users\Moinuddin_Projects\exp-versions\Voice Deepfake"
-VIDEO_DIR = r"C:\Users\Moinuddin_Projects\exp-versions\Deepfake\backend"
-FRONTEND_DIR = r"C:\Users\Moinuddin_Projects\exp-versions\Deepfake\frontend"
+AUDIO_DIR = r"C:\...\Voice Deepfake"
+VIDEO_DIR = r"C:\...\Deepfake\backend"
+FRONTEND_DIR = r"C:\...\Deepfake\frontend"
 # ==============================================================================
 
 # FRONTEND_MODE = "dev"   # hot reload, red overlays
